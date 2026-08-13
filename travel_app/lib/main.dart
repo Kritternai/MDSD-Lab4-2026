@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'router/app_router.dart';
 
+// Travel App Entry Point
 void main() {
   runApp(const TravelApp());
 }

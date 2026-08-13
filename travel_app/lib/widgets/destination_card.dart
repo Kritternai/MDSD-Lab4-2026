@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/destination.dart';
+import '../models/saved_state.dart';
 
 class DestinationCard extends StatelessWidget {
   final Destination destination;
@@ -87,6 +88,32 @@ class DestinationCard extends StatelessWidget {
                           ),
                         ],
                       ),
+                    ),
+                  ),
+                  // 3c. ปุ่มบันทึก (Heart Icon) ที่มุมขวาบน
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: ListenableBuilder(
+                      listenable: SavedState.instance,
+                      builder: (context, _) {
+                        final isSaved = SavedState.instance.isSaved(destination.id);
+                        return GestureDetector(
+                          onTap: () => SavedState.instance.toggleSave(destination.id),
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.45),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isSaved ? Icons.favorite : Icons.favorite_border,
+                              color: isSaved ? Colors.pinkAccent : Colors.white,
+                              size: 18,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],

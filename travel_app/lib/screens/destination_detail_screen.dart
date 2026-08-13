@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../models/destination.dart';
+import '../models/saved_state.dart';
 
 class DestinationDetailScreen extends StatelessWidget {
   final Destination destination;
@@ -29,22 +30,36 @@ class DestinationDetailScreen extends StatelessWidget {
           ),
         ),
         actions: [
-          Container(
-            margin: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.45),
-              shape: BoxShape.circle,
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.favorite_border, color: Colors.white),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text('บันทึก ${destination.name} แล้ว!'),
-                      duration: const Duration(seconds: 2)),
-                );
-              },
-            ),
+          ListenableBuilder(
+            listenable: SavedState.instance,
+            builder: (context, _) {
+              final isSaved = SavedState.instance.isSaved(destination.id);
+              return Container(
+                margin: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.45),
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: Icon(
+                    isSaved ? Icons.favorite : Icons.favorite_border,
+                    color: isSaved ? Colors.pinkAccent : Colors.white,
+                  ),
+                  onPressed: () {
+                    SavedState.instance.toggleSave(destination.id);
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(isSaved
+                            ? 'ยกเลิกการบันทึก ${destination.name} แล้ว'
+                            : 'บันทึก ${destination.name} แล้ว! 🎉'),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
           ),
         ],
       ),
