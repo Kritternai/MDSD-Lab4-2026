@@ -485,6 +485,52 @@ class DestinationCard extends StatelessWidget {
 
 บันทึกรูปผลการทดลอง
 
+#### โค้ดที่แก้ไข (`lib/widgets/destination_card.dart`)
+
+```dart
+// Checkpoint 3.1 & 3.3: ย้าย Rating Badge มามุมซ้ายล่าง + Comment อธิบาย Positioned
+// - Positioned สื่อสารกับ Stack เท่านั้น เพื่อวางตำแหน่ง Child แบบ Absolute
+// - ถ้าวางนอก Stack (เช่น ใน Column/Row) จะเกิด Error ทันที
+Positioned(
+  bottom: 8,
+  left: 8,
+  child: Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    decoration: BoxDecoration(
+      color: Colors.black.withValues(alpha: 0.6),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.star, color: Colors.amber, size: 14),
+        const SizedBox(width: 4),
+        Text(
+          destination.rating.toString(),
+          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+        ),
+      ],
+    ),
+  ),
+),
+
+// Checkpoint 3.2: Row แสดงสถานะพร้อมเข้าพัก หุ้มด้วย Expanded
+Row(
+  children: [
+    Icon(Icons.bed, size: 14, color: Colors.green.shade600),
+    const SizedBox(width: 4),
+    Expanded(
+      child: Text(
+        'พร้อมเข้าพัก',
+        style: TextStyle(fontSize: 12, color: Colors.green.shade600, fontWeight: FontWeight.w600),
+        overflow: TextOverflow.ellipsis,
+      ),
+    ),
+  ],
+),
+```
+
+#### รูปผลการทดลอง
 ![ผลการทดลอง Checkpoint 3](images/explore_grid_checkpoint3.png)
 ---
 
@@ -640,6 +686,46 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
 บันทึกรูปผลการทดลอง
 
+#### โค้ดที่แก้ไข (`lib/screens/explore_screen.dart`)
+
+```dart
+Widget _buildGrid() {
+  // Checkpoint 4.1: เปรียบเทียบ MediaQuery vs LayoutBuilder constraints
+  // - MediaQuery.of(context).size.width คือความกว้างของหน้าจอทั้งหมด (Viewport Width)
+  // - LayoutBuilder constraints.maxWidth คือความกว้างที่ Widget ได้รับจาก Parent
+  // - ควรใช้ LayoutBuilder ทำ Responsive ของ Component เพื่อให้ปรับขนาดได้อย่างแม่นยำไม่ว่าจะถูกวางใน Container ขนาดเท่าใด
+  final screenWidth = MediaQuery.of(context).size.width;
+
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      debugPrint('MediaQuery width: $screenWidth, LayoutBuilder maxWidth: ${constraints.maxWidth}');
+
+      int crossAxisCount;
+      if (constraints.maxWidth < 600) {
+        crossAxisCount = 2; // Compact
+      } else if (constraints.maxWidth < 840) {
+        crossAxisCount = 3; // Medium
+      } else if (constraints.maxWidth < 1200) {
+        crossAxisCount = 4; // Expanded
+      } else {
+        crossAxisCount = 5; // Large (>= 1200 dp)
+      }
+
+      return GridView.builder(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 0.72,
+        ),
+        // ...
+      );
+    },
+  );
+}
+```
+
+#### รูปผลการทดลอง
 ![ผลการทดลอง Checkpoint 4.1](images/checkpoint4_1_result.png)
 
 #### ขั้นตอนที่ 4.2 — Destination Detail Screen
@@ -1353,9 +1439,109 @@ final GoRouter appRouter = GoRouter(
 > 3. ทดสอบ Fallback ที่แก้ไข โดยรันแอปบน Chrome (`flutter run -d chrome`) แล้วพิมพ์ URL `/explore/destinations/999` ตรง ๆ ใน Address Bar (เป็น `id` ที่ไม่มีอยู่จริง) — ต้องเห็นหน้า "ไม่พบข้อมูลที่ต้องการ" ไม่ใช่ Error สีแดงหรือข้อมูลผิดตัว
 
 บันทึกรูปผลการทดลอง
-```image
-บันทึกรูปโค้ด และรูปผลการทดลองที่นี่ (กรณีที่ยังไม่สามารถรันได้ ให้ทดลองจนถึงขั้นตอนที่สามารถ capture รูปได้และบันทึกรูปไว้ในส่วนนี้)
+
+#### โค้ดที่แก้ไข (`lib/screens/about_screen.dart`)
+
+```dart
+import 'package:flutter/material.dart';
+
+class AboutScreen extends StatelessWidget {
+  const AboutScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('เกี่ยวกับ')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.info_outline, size: 64, color: Colors.blue.shade300),
+            const SizedBox(height: 16),
+            const Text('Travel App v1.0.0', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text('แอปพลิเคชันแนะนำสถานที่ท่องเที่ยว พัฒนาด้วย Flutter และ Go Router', style: TextStyle(color: Colors.grey)),
+          ],
+        ),
+      ),
+    );
+  }
+}
 ```
+
+#### โค้ดที่แก้ไข (`lib/router/app_router.dart`)
+
+```dart
+// Checkpoint 5.1 (1): เพิ่ม NavigationDestination เมนู "เกี่ยวกับ"
+destinations: const [
+  // ... (Home, Explore, Saved, Profile)
+  NavigationDestination(
+    icon: Icon(Icons.info_outline),
+    selectedIcon: Icon(Icons.info),
+    label: 'เกี่ยวกับ',
+  ),
+],
+
+// Checkpoint 5.1 (2): Fallback Logic ใน Route destination-detail กรณีหา ID ไม่เจอ
+GoRoute(
+  path: 'destinations/:id',
+  name: 'destination-detail',
+  builder: (context, state) {
+    final id = state.pathParameters['id'];
+    Destination? destination;
+    if (state.extra is Destination) {
+      destination = state.extra as Destination;
+    } else {
+      try {
+        destination = sampleDestinations.firstWhere((d) => d.id == id);
+      } catch (_) {
+        destination = null;
+      }
+    }
+
+    if (destination == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('ไม่พบข้อมูล')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              Text('ไม่พบข้อมูลที่ต้องการ (ID: $id)', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => context.go('/explore'),
+                child: const Text('กลับหน้าสำรวจ'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    return DestinationDetailScreen(destination: destination);
+  },
+),
+
+// Checkpoint 5.1 (1): เพิ่ม Branch 4: About
+StatefulShellBranch(
+  routes: [
+    GoRoute(
+      path: '/about',
+      name: 'about',
+      builder: (context, state) => const AboutScreen(),
+    ),
+  ],
+),
+```
+
+#### รูปผลการทดลอง
+
+1. **ทดสอบ Fallback พิมพ์ URL `/explore/destinations/999` (ID ที่ไม่มีอยู่จริง):**
+![ผลการทดลอง Fallback Checkpoint 5.1](images/checkpoint5_1_result.png)
+
+2. **ทดสอบ Tab "เกี่ยวกับ" ใหม่ (Path `/about`):**
+![ผลการทดลอง About Screen Checkpoint 5.1](images/checkpoint5_1_about_result.png)
 
 
 #### ขั้นตอนที่ 5.2 — ตั้งค่า main.dart
