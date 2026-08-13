@@ -67,7 +67,7 @@ class HomeScreen extends StatelessWidget {
 
               // ListView แนวนอน
               SizedBox(
-                height: 300,
+                height: 310,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: featured.length,
